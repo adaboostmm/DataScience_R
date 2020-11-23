@@ -1,10 +1,8 @@
 ---
-title: "Project Proposal : Stats 290 : Minakshi Mukherjee"
+title: "Project Proposal : R package for LiDAR visualization"
 output:
      html_document
 ---
-
-__Proposal Deadline: Feb 3, 2019 23:59:00 hrs.__
 
 - Edit this markdown file by __replacing only__ what is there in the
 chunks named `q0`, `q1`, `q2`, ..., `q5` with your team's appropriate
@@ -40,27 +38,23 @@ and bechmark those against base R query output.
 2.  Visualization.  LiDAR dataset consists of billions of points, where each point has a 
 X, Y, Z value and other attributes. LIDAR is a very accurate and precise technology that 
 uses laser pulse to strike an object, so it captures the surface elevation usually 
-hidden by vegetation or forest canopy. In order to turn billions of LiDAR points into 
-Digital Surface Models(DSMs), Digital Terrain Models(DTMs), Canopy Height Models(CHMs) 
-and elevation contours, this package will use the C++ package LAStools as the fastest 
-and most memory efficient mechanism for LiDAR processing. 
+hidden by vegetation or forest canopy. 
 
-*** Due to the limited time frame of the project, C++ package LAStools has not been used
-in the project implementation, instead all functions have been developed using R.
+*** All functions have been developed using R.
 
 3.  Analysis.  This package will include multiple functions for the following tasks:
 > Read LiDAR files and print summary
 
 *** Implemented: readFile.R, lasSlotExtract.R, lasSlotPrint.R, processTiff.R
 
-> Use LAStools to explore Digital Surface Models, Digital Terrain Models, 
+> Use R functions to explore Digital Surface Models, Digital Terrain Models, 
 Canopy Height Models, several elevation contours etc
 
-*** Instead of C++ package LAStools, R function has been developed.
+*** R function has been developed.
 
 Implemented: lasVisualize.R
 
-> Use LAstools to prepare a meaningful dataset that can be fed into different
+> Prepare a meaningful dataset that can be fed into different
 classification algorithms in R
 
 *** In addition to the above R functions, treeDensityIndex.R and treeDensityPlot.R 
@@ -72,8 +66,7 @@ of vegation, building and dry land.
 *** A typical LiDAR file comes as several Gigabytes in size. In order to understand a 
 topoloy or to proceed with vegetation segmentation, feature extraction etc, 100k-200k 
 files of this size need to be processed which requires a cloud computing environment.
-Due to the limited time frame and lack of proper computing resources, the classification 
-component is eliminated from the project.
+An outline of the classification  component is presented in the package.
 
 > Showcase open source columnar database MonetDB to perform query analysis. 
 
@@ -93,8 +86,6 @@ the vegetaion. At present, it is an open problem in our company. My objective is
 build a comprehensive LiDAR data analysis package to illustrate step by step data 
 exploration and classification. The visualization and report from this package will 
 equip other teams to proceed to the next phase of utilizing LiDAR data.
-
-https://www.informatica.com/content/dam/informatica-com/global/amer/us/collateral/white-paper/grid-health-360_white-paper_3487en.pdf
 
 Apart from the above use case, LiDAR data has a lot of other use cases. 
 Since LiDAR dataset always comes in a standard vector format, my package can 
@@ -174,26 +165,13 @@ dangerous <- "dangerous :-)"
 
 ```{r q5}
 languages <- list(
-    sunet1 = c(cxx = basic,
+    sunet1 = c(c++ = proficient,
                java = none,
                python = proficient,
                julia = none, 
                ruby = none)
 )
 ```
-
-## Comments and Responses
-
-__Note__ Your responses should be in this markdown itself, right after
-each point. You do not need to submit or email the responses, but do
-update it on your github repo exactly where you found it.
-
-1. We discussed your project in person. So you already know of some
-   comments.
-
-2. I think this can be a large project, so do identify things you can
-   do well: data handling, visualization.  The machine learning part
-   can take time and so I suggest you do that last.
 
 
 
