@@ -1,0 +1,35 @@
+Package: adaboost
+Type: Package
+Title: LiDAR Visualization and Statistical Analysis
+Version: 1.0
+Author: adaboost
+Maintainer: Minakshi Mukherjee <adaboost@stanford.edu>
+Description: Collection of tools for data processing, visulization, loading data files
+    into columnar storage MonetDBLite, calculation of tree density scores of LiDAR 
+    files types.
+License: GPL (>=2)
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.1
+Imports: 
+    lidR,
+    stringr,
+    raster,
+    sp,
+    methods,
+    readr,
+    rasterVis,
+    ggplot2,
+    dplyr,
+    MonetDBLite,
+    DBI,
+    stats,
+    grDevices,
+    rLiDAR,
+    scatterplot3d,
+    tibble
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat
+VignetteBuilder: knitr

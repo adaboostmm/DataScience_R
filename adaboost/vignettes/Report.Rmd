@@ -1,0 +1,374 @@
+---
+title: "LiDAR Visualization and Statistical Analysis"
+author: "Minakshi Mukherjee"
+date: "`r Sys.Date()`"
+output: prettydoc::html_pretty
+highlight: vignette
+vignette: >
+  %\VignetteIndexEntry{Report}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}{inputenc}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  cache = FALSE,
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Introduction
+
+This R `adaboost` package  presents a wide array of visualization techniques for Airborne LiDAR (Light Detection and Ranging) data. LiDAR is an active remote sensing technique and it works by pulsing a laser from an aircraft down to the surface and measuring how long it takes for the laser to come back to the detector onboard the aircraft. The two way travel time can be turned into a distance or height of the aircraft which can then be turned into an elevation. 
+
+Given a LiDAR file, users will be able to use adaboost package to extract metadata and 
+visualize some of the important elevation models. Use of MonetDBLite provides an added 
+advantage to load large files into database for future analysis. A collection of tree scores
+derived from LiDAR data will allow users to work further to train a classifier for Machine 
+Learning.
+
+## Outline
+
+- Section I-VI: How to use the package adaboost.
+- Section VII:  Challenges, deviation from original project proposal
+- Section VIII: R CMD check --as-cran NOTES and other warnings
+- Section IX:   Summary
+
+```{r, echo=FALSE, fig.cap="Fig. 1: LiDAR data collection", out.width = '40%'}
+pictFile <- system.file("extdata", "lidar_img_1.png", package = "adaboost")
+knitr::include_graphics(pictFile)
+```
+
+## Section - I 
+### Display LiDAR Point cloud metadata:
+
+```{r, results="hide", warning = FALSE}
+# Read a .las/.laz file
+library(adaboost)
+dFile <- system.file("extdata", "lasc04765150.las", package = "adaboost")
+dlasOut <- readFile(dFile)
+# Extract all the LAS metadata for this file
+lasMetadata <- lasSlotExtract(dlasOut, dFile)
+# Extract individual components
+dataTibble <- lasMetadata["dataTibble"]$dataTibble
+dataColName <- lasMetadata["dbColnamesData"]$dbColnamesData
+headerTibble <- lasMetadata["headerTibble"]$headerTibble
+headerColName <- lasMetadata["dbColnamesHeader"]$dbColnamesHeader
+```
+
+### Total no of points in this dataset 
+```{r, warning = FALSE}
+lasMetadata["totalPts"]
+```
+
+### LiDAR stores returns of the laser pulses as first, second or third return etc.
+### It also stores total no of returns
+- anything after first return is associated to vegetaion
+- Type of returns in this dataset
+```{r, warning = FALSE}
+lasMetadata["returnNo"]
+```
+
+### Total Number of returns in this dataset
+```{r, warning = FALSE}
+lasMetadata["noOfReturns"]
+```
+
+### ClassificationKey provides details whether it is ground, vegetation, building etc.. 
+```{r, warning = FALSE}
+lasMetadata["classificationMap"]
+```
+### Intensity provides compositional information of surface material.
+LiDAR data is collected mostly using infrared laser, so vegetation reflects brightly in 
+the infrared, hence vegetation gives high intensity number usually greater than 100.
+
+```{r, warning = FALSE}
+lasMetadata["top5Intensity"]
+```
+### Summary printout from LiDAR data
+
+This shows all the point cloud metadata in the LAS file .
+```{r}
+lasSlotPrint(dlasOut)
+```
+
+## Section - II 
+### Visualize LiDAR Point cloud:
+
+### A second example file is used as it has a dense vegetation layer.
+
+```{r, results="hide" , warning = FALSE}
+# Read the file
+gFile <- system.file("extdata", "project.las", package = "adaboost")
+glasOut <- readFile(gFile)
+```
+
+### Use point cloud to build high resolution digital elevation model(DEM)
+
+`DEM`
+
+- `DEM` is a raster or grid of elevation values that can be rendered to show the landscape.
+- This is made from the last ReturnNumber of LiDAR data that represents bare earth.
+So it provides the surface texture of the ground. 
+- Geologists and hydrologists are very interested in analyzing `DEM` images.
+
+```{r, results="hide", out.width = "85%", fig.width= 8, fig.height= 8}
+lasVisualize(glasOut, "plotDem")
+```
+
+### Use point cloud to build digital surface model(DSM) or Canopy Height Model(CHM)
+
+`DSM` or `CHM`
+
+- This is made from the first ReturnNumber of LiDAR data, hence it represents forest canopy. 
+- Biologists are very interested in analyzing `DSM` images.
+```{r, out.width = "85%", fig.width= 8, fig.height= 8}
+lasVisualize(glasOut, "plotChm")
+```
+
+### Use point cloud to show tree tops on digital surface model(DSM)
+### This information is used to carry out further tree density score analysis.
+
+`TreeTops`
+
+Tree Tops on Canopy Height Model
+```{r, results="hide", out.width = "85%", fig.width= 9, fig.height= 9}
+lasVisualize(glasOut, "plotTreeTop")
+```
+
+## Section - III 
+### Visualize a Raster file(.tif):
+
+Sometimes files may be obtained in GeoTIFF format. 
+
+This is a .tif or image file format that includes embedded spatial (georeferencing) 
+information as tags. 
+
+These tags can include the following raster metadata:
+
+- Spatial Extent : The area covered by the metadata
+- Coordinate Reference System`(CRS)` : spatial projection or coordinate reference system 
+                                      for the data
+- Spatial Resolution of the pixel: Rastor format is composed of pixels. 
+                                   Spatial resolution denotes the area on the ground 
+                                   that each pixel cover.
+- Digital surface model`(DSM)` can be obtained directly from GeoTiff files.
+
+The following is an example .tif file to display Digital surface model`(DSM)`.
+This raster grid is very useful input for a neural net model for feature segmentation.
+
+```{r, results="hide", out.width = "75%", fig.width= 7, fig.height= 7}
+tFile <- system.file("extdata", "037_HARV_ndvi_crop.tif", package = "adaboost")
+tifFile <- processTiff(tFile)$rasterTif
+```
+
+## Section - IV
+### How to use MonetDB in the context of LiDAR
+
+- Usually each LiDAR point cloud file is very large(min 2GB) containing several billions of point cloud data.
+- Hence, it is useful to load the data into a columnar database MonetDB for further analysis.
+- The following is a toy example using a small file that displays how to use MonetDB in the package.
+
+### It loads two tibbles(dataTibble and headerTibble) into MonetDB 
+
+- Function loadMonetDB reads the dataTibble and loads into table slotdata 
+- It displays total count from the table and displays the first 10 rows.
+- dataTibble represents point cloud data, so the rowcount in slotdata represents
+total point cloud data in the datafile.
+
+```{r, warning = FALSE}
+MonetDBLite::monetdblite_shutdown()
+loadMonetDB(dataTibble, dataColName, "slotdata" )
+MonetDBLite::monetdblite_shutdown()
+```
+
+- slotHeader contains metadata of LiDAR point cloud header, so it has only one row.
+
+```{r, warning = FALSE}
+MonetDBLite::monetdblite_shutdown()
+loadMonetDB(headerTibble, headerColName, "slotheader" )
+MonetDBLite::monetdblite_shutdown()
+```
+
+## Section - V
+### Tree Density analysis and forest classification
+
+### Rumple Index, ratio of canopy surface over ground surface
+
+- Perfectly flat surface, rumple_index = 1
+- Rough surface, rumple_index > 1
+
+```{r, warning = FALSE}
+scoreOutput <- treeDensityIndex(dlasOut)
+scoreOutput["RumpleIndex"]
+```
+
+Rumple Index is just above 1 for this data set as it containly primarily ground data.
+
+### Tree Density Score.
+
+```{r, eval= FALSE}
+scoreOutput["densityScore"]
+```
+
+This has a low density score. The tree density plot verifies that.
+
+### The following tree Density Plot shows that vegetation is really sparse for this data.
+
+```{r, warning = FALSE}
+dtreeCoordinates <- scoreOutput["treeCoordinates"]
+treeX <- dtreeCoordinates$treeCoordinates$x
+treeY <- dtreeCoordinates$treeCoordinates$y
+treeZ <- dtreeCoordinates$treeCoordinates$height
+treeDensityPlot(treeX, treeY, treeZ)
+```
+
+
+### The total No of Trees for this data.
+
+```{r, warning = FALSE}
+scoreOutput["treeCount"]
+```
+
+### The percentage of tall trees with quantile rank == 4 with respect to tree height
+
+```{r, warning = FALSE}
+scoreOutput["treeFreq"]
+```
+
+
+### Rumple Index from the second dataset which has a lot more vegetation to show some variability.
+
+```{r, warning = FALSE}
+gscoreOutput <- treeDensityIndex(glasOut)
+gscoreOutput["RumpleIndex"]
+```
+
+RumpleIndex is above 8 for this file as it has dense canopies.
+
+### Tree Density Score for this data set.
+
+```{r}
+gscoreOutput["densityScore"]
+```
+
+As the Rumple Index suggestd above, it has higher tree density score.
+
+### The following tree Density Plot shows dense vegetation for this data.
+
+```{r, warning = FALSE}
+gtreeCoordinates <- gscoreOutput["treeCoordinates"]
+gtreeX <- gtreeCoordinates$treeCoordinates$x
+gtreeY <- gtreeCoordinates$treeCoordinates$y
+gtreeZ <- gtreeCoordinates$treeCoordinates$height
+treeDensityPlot(gtreeX, gtreeY, gtreeZ)
+```
+
+### The total No of trees for this data.
+
+```{r, warning = FALSE}
+gscoreOutput["treeCount"]
+```
+
+### The percentage of tall trees with quantile rank == 4 with respect to tree height
+
+```{r, warning = FALSE}
+gscoreOutput["treeFreq"]
+```
+
+## Section - VI
+### A summary of tree scores with Forest classification as training data for future ML model
+
+Here is an example csv file that can be generated with the tree scores and plots demonstrated
+in `Section-V`. We need a training sample like this for several thousand LiDAR files which can be fed into a Machine Learning Algorithm to predict Forest Classification.
+
+```{r, echo=FALSE, fig.cap="Fig. 1: Example csv file", out.width = '40%'}
+pictFile <- system.file("extdata", "lidR_csv.png", package = "adaboost")
+knitr::include_graphics(pictFile)
+```
+
+## Section - VII
+### Challenges, deviation from original project proposal
+
+A typical LiDAR file comes as several Gigabytes in size. In order to understand a 
+topoloy or to proceed with vegetation segmentation, feature extraction etc, 100k-200k 
+files of this size need to be processed which requires a cloud computing environment.
+It is always challenging to delve into a datafile that is abstract, sometimes heavily 
+vendor dependent.
+
+In spite of all these blockers, this project has been implemented to its entirety
+within a limited time frame that can be processed on a typical laptop with 16GB RAM 
+and any user or a data analyst can run through some of the examples to get a basic understanding on LiDAR files.
+
+In order to make the data available as part of the package, a very small example las file
+has been chosen and some informations found to be missing on these types of tiny files; 
+hence the scope of the project had to be adjusted accordingly.
+
+## Section - VIII
+### R CMD check --as-cran NOTES and other warnings 
+
+- Message: Selecting by Intensity while extracting LAS metadata: This cannot be avoided.
+- Warning messages:
+1: Invalid data: 194244 points with a 'return number' greater than the 'number of returns'. 
+
+2: Invalid data: 194244 points with a number of returns equal to 0 found. 
+
+( This is a data issue in the example LAS file, hence this warning cannot be avoided)
+- Checking CRAN incoming feasibility ... NOTE
+
+Maintainer: ‘Minakshi Mukherjee <adaboost@stanford.edu>’
+
+New submission
+
+Size of tarball: 7585023 bytes
+- Checking installed package size ... NOTE
+  
+installed size is 15.4Mb
+
+sub-directories of 1Mb or more:
+
+doc       1.7Mb
+
+extdata  12.9Mb
+- Checking examples ... NOTE
+
+Examples with CPU or elapsed time > 5s
+                   user system elapsed
+
+loadMonetDB      36.548  0.839  36.241
+
+lasSlotPrint     35.318  0.385  32.720
+
+treeDensityIndex 24.501  1.516  24.813
+
+treeDensityPlot  23.282  1.740  23.727
+
+lasVisualize     20.068  0.619  18.055
+
+readFile          7.811  0.216   6.590
+    
+## Section - IX
+### Summary: What is next? How to go about Machine Learning using LiDAR data?
+
+- Set up a cloud computing environment on GPU and R already provides a 
+strong foundation for cloud computing.
+- Run the package on Cloud computing using 100k-200k LiDAR files and prepare a 
+good training set that can be used to train different supervised or unsupervised 
+Machine Learning(ML) algorithms.
+- LiDAR exploration is primarily trapped into academic research papers. 
+Hence, exploring all the functions of the adaboost package on several large 
+datafiles will be useful to develop a real application in R. 
+- adaboost package uses a few of the existing R LiDAR packages which seem to be very inefficient. Rewriting the existing algorithms will be necessary to boost performance
+of LiDAR data processing. There are definitely opportunities to incoporate C++ 
+functions in conjunction with R to boost performance.
+
+## Session Info
+
+```{r}
+sessionInfo()
+```

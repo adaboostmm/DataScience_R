@@ -1,0 +1,209 @@
+---
+title: "Project Proposal : Stats 290 : Minakshi Mukherjee"
+output:
+     html_document
+---
+
+__Proposal Deadline: Feb 3, 2019 23:59:00 hrs.__
+
+- Edit this markdown file by __replacing only__ what is there in the
+chunks named `q0`, `q1`, `q2`, ..., `q5` with your team's appropriate
+answers.
+
+- Upload the filled in markdown to the project proposal assignment
+area (will be created shortly) in every one of the team member's
+private directory with the name `proposal.Rmd`.
+
+0. Who are the authors of this package? See format below where you
+   should replace `sunet1`, `sunet2`, and `Full Name1` and `Full
+   Name2`.
+
+```{r q0}
+authors <- list(adaboost = "Minakshi Mukherjee")
+```
+
+1. What is your package trying to achieve?  Who is it aimed at?
+
+```q1
+
+1.  Querying.  The package will enable scientists and users to perform exploratory 
+data analysis for Light Detection and Ranging(LiDAR) data. Usually each LiDAR 
+file is very large, so it is computationally intensive to address scientific questions. 
+This package will provide step by step approach to perform statistical analysis on 
+LiDAR dataset and will provide classification techniques to distinguish among 
+vegetation, buildings and dry land. The package will use Open-Source embedded 
+database MonetDBLite. This columnar database will showcase few analytic queries 
+and bechmark those against base R query output.
+
+*** This outline has been mostly followed in the project implementation.
+
+2.  Visualization.  LiDAR dataset consists of billions of points, where each point has a 
+X, Y, Z value and other attributes. LIDAR is a very accurate and precise technology that 
+uses laser pulse to strike an object, so it captures the surface elevation usually 
+hidden by vegetation or forest canopy. In order to turn billions of LiDAR points into 
+Digital Surface Models(DSMs), Digital Terrain Models(DTMs), Canopy Height Models(CHMs) 
+and elevation contours, this package will use the C++ package LAStools as the fastest 
+and most memory efficient mechanism for LiDAR processing. 
+
+*** Due to the limited time frame of the project, C++ package LAStools has not been used
+in the project implementation, instead all functions have been developed using R.
+
+3.  Analysis.  This package will include multiple functions for the following tasks:
+> Read LiDAR files and print summary
+
+*** Implemented: readFile.R, lasSlotExtract.R, lasSlotPrint.R, processTiff.R
+
+> Use LAStools to explore Digital Surface Models, Digital Terrain Models, 
+Canopy Height Models, several elevation contours etc
+
+*** Instead of C++ package LAStools, R function has been developed.
+
+Implemented: lasVisualize.R
+
+> Use LAstools to prepare a meaningful dataset that can be fed into different
+classification algorithms in R
+
+*** In addition to the above R functions, treeDensityIndex.R and treeDensityPlot.R 
+are implemented to prepare a meaningful dataset.
+
+> Use optimized Bagging algorithm to perform classification 
+of vegation, building and dry land.
+
+*** A typical LiDAR file comes as several Gigabytes in size. In order to understand a 
+topoloy or to proceed with vegetation segmentation, feature extraction etc, 100k-200k 
+files of this size need to be processed which requires a cloud computing environment.
+Due to the limited time frame and lack of proper computing resources, the classification 
+component is eliminated from the project.
+
+> Showcase open source columnar database MonetDB to perform query analysis. 
+
+*** loadMonetDB.R showcases a few database queries.
+```
+
+2. Briefly describe the background if that's not obvious.  What field
+   or area of interest is it related to?  (Just briefly, in a paragraph
+   or two, maximum.) References, including web references, are welcome
+   where available.
+
+```q2
+
+This package design is inspired by the R&D effort of my organization who is trying to 
+analyze and understand LiDAR data in the context of how close the power line is to 
+the vegetaion. At present, it is an open problem in our company. My objective is to 
+build a comprehensive LiDAR data analysis package to illustrate step by step data 
+exploration and classification. The visualization and report from this package will 
+equip other teams to proceed to the next phase of utilizing LiDAR data.
+
+https://www.informatica.com/content/dam/informatica-com/global/amer/us/collateral/white-paper/grid-health-360_white-paper_3487en.pdf
+
+Apart from the above use case, LiDAR data has a lot of other use cases. 
+Since LiDAR dataset always comes in a standard vector format, my package can 
+be used as an exploratory data analysis and visualization tool for almost 
+every use cases. Several R packages for LiDAR have been built over a period of 
+time, however there is always a need for a single package that can show all 
+different types of LiDAR data exploration. Also, there are always further 
+opportunities to incorporate more C++ packages into LiDAR analysis to speed 
+up processing.
+
+Some of the other important use cases of LiDAR are: Agriculture, Forest Fire 
+Management, Tourism and Parks management, Biodiversity of Birds, Building 3D 
+simulation of River Bank and Flood Model, Transport Planning, CoastLine 
+Management, Archeology, Glacier Volume Change monitoring, Use of Differential 
+Absorption LiDAR(DIAL) to trace amount of gases above the hydrocarbon 
+region and so on..
+```
+
+3. Provide one or two use cases; that is, in a sentence or so say how
+   you see someone using the package.
+
+```q3
+
+Scientists or users will pass their LiDAR files to the R package and 
+it will produce a visualization for surface model, terrain model, 
+canopy height etc..
+
+Users will have options to extract elevation data to be used for their individual 
+use cases. This data will be stored into an open source columnar database MonetDB
+to show sample queries.
+
+There will be examples and test cases showing an optimized bagging algorithm.
+Classification algorithm will be trained on the given dataset and prediction 
+output will be displayed on a different test data set. Users will get idea as 
+how to train this types of dataset and what parameters to pass. 
+
+*** Vignette shows a clear explanation of all the use cases of the package.
+```
+
+4. If you can, list the main functions or other software you plan on
+   including.  No need to implement anything now, but you should have
+   an idea.
+
+```q4
+
+The R package will provide the following functions: reading .las or 
+.laz files for LiDAR data and printing summary; creating DSM, DEM, 
+DTM, CHM models using LAStools to produce graphs and visualizations;
+preparing a meaningful and simplified dataset out of the original LiDAR 
+files as an input to train classification model using optimized 
+bagging algorithm; show predictions on a test dataset using the 
+trained model.
+The R package will also provide MonetDB sample queries and outputs 
+for deeper analysis by the user.
+
+*** Implemented all of above in these R functions:
+readFile.R
+processTiff.R
+lasSlotExtract.R
+lasVisualize.R
+loadMonetDB.R
+treeDensityIndex.R
+treeDensityPlot.R
+```
+
+```{r, echo = FALSE, hide = FALSE}
+## Do not edit
+none <- "none"
+basic <- "basic"
+proficient <- "proficient"
+dangerous <- "dangerous :-)"
+```
+
+5. For languages C/C++, Java, Python, Ruby, please specify your
+   proficiency: Proficient, basic knowledge, no knowledge.  (This
+   helps us evaluate the proposal sometimes and offer suggestions.)
+
+```{r q5}
+languages <- list(
+    sunet1 = c(cxx = basic,
+               java = none,
+               python = proficient,
+               julia = none, 
+               ruby = none)
+)
+```
+
+## Comments and Responses
+
+__Note__ Your responses should be in this markdown itself, right after
+each point. You do not need to submit or email the responses, but do
+update it on your github repo exactly where you found it.
+
+1. We discussed your project in person. So you already know of some
+   comments.
+
+2. I think this can be a large project, so do identify things you can
+   do well: data handling, visualization.  The machine learning part
+   can take time and so I suggest you do that last.
+
+
+
+
+
+
+
+
+
+
+
+
+
